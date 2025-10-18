@@ -35,7 +35,6 @@ fun ArchiveScreen(
     viewModel: QueueViewModel = hiltViewModel()
 ) {
     val archivedItems by viewModel.archivedItems.collectAsStateWithLifecycle()
-
     Scaffold(
         topBar = {
             TopAppBar(
