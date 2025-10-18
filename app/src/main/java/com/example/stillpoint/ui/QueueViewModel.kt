@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stillpoint.data.ContentRepository
 import com.example.stillpoint.data.local.ContentItem
+import com.example.stillpoint.data.local.TimeFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,9 +71,16 @@ class QueueViewModel @Inject constructor(private val repository: ContentReposito
         _selectedFilter.value = filter
     }
 
+    /* --- DELETE FUNCTIONS --- */
     fun deleteItem(item: ContentItem) {
         viewModelScope.launch {
             repository.deleteItem(item)
+        }
+    }
+
+    fun deleteMultipleItems(items: List<ContentItem>) {
+        viewModelScope.launch {
+            repository.deleteMultipleItems(items)
         }
     }
 
@@ -110,10 +118,3 @@ sealed class UiEvent {
 }
 
 
-enum class TimeFilter(val displayText: String) {
-    ALL("All"),
-    FIVE_MIN("~5 min"),
-    FIFTEEN_MIN("~15 min"),
-    THIRTY_MIN("~30 min"),
-    ONE_HOUR_PLUS("1 hr+")
-}

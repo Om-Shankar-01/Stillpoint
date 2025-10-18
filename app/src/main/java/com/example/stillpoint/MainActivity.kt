@@ -15,9 +15,9 @@ import androidx.navigation.toRoute
 import com.example.stillpoint.ui.Archive
 import com.example.stillpoint.ui.Queue
 import com.example.stillpoint.ui.Reader
-import com.example.stillpoint.ui.screens.ArchiveScreen
-import com.example.stillpoint.ui.screens.homescreen.HomeScreen
-import com.example.stillpoint.ui.screens.ReaderScreen
+import com.example.stillpoint.ui.archivescreen.ArchiveScreen
+import com.example.stillpoint.ui.homescreen.HomeScreen
+import com.example.stillpoint.ui.readerScreen.ReaderScreen
 import com.example.stillpoint.ui.theme.StillpointTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -38,13 +38,13 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(navController = navController)
                         }
 
-                        composable<Archive> { // <-- ADD THIS BLOCK
+                        composable<Archive> {
                             ArchiveScreen(navController = navController)
                         }
 
                         composable<Reader> {backStackEntry ->
                             val readerScreen: Reader = backStackEntry.toRoute()
-                            ReaderScreen(url = readerScreen.url, navController = navController)
+                            ReaderScreen(navController = navController)
                         }
                     }
                 }

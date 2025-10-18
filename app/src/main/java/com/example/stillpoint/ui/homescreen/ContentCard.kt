@@ -1,7 +1,6 @@
-package com.example.stillpoint.ui.screens.homescreen
+package com.example.stillpoint.ui.homescreen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,21 +38,30 @@ import coil3.compose.AsyncImage
 import com.example.stillpoint.data.local.ContentItem
 import com.example.stillpoint.data.local.ContentType
 import com.example.stillpoint.ui.theme.StillpointTheme
-import com.example.stillpoint.ui.theme.bodyFontFamily
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ContentCard(item: ContentItem, onClick: () -> Unit, isStart: Boolean, isEnd: Boolean) {
+fun ContentCard(
+    item: ContentItem,
+    isSelected: Boolean,
+    isStart: Boolean,
+    isEnd: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Card(
-        shape = RoundedCornerShape(
+        colors = CardDefaults.cardColors().copy(
+            containerColor = if (!isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer,
+        ),
+        shape = if (!isSelected) RoundedCornerShape(
             topStart = if (isStart) 16.dp else 4.dp,
             topEnd = if (isStart) 16.dp else 4.dp,
             bottomStart = if (isEnd) 16.dp else 4.dp,
             bottomEnd = if (isEnd) 16.dp else 4.dp,
-        ),
-        modifier = Modifier
+        ) else {
+            RoundedCornerShape(16.dp)
+        },
+        modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -84,7 +93,6 @@ fun ContentCard(item: ContentItem, onClick: () -> Unit, isStart: Boolean, isEnd:
             ) {
                 Text(
                     text = item.title,
-                    fontFamily = bodyFontFamily,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
@@ -112,7 +120,6 @@ fun ContentCard(item: ContentItem, onClick: () -> Unit, isStart: Boolean, isEnd:
                     Icon(
                         imageVector = iconInfo.first,
                         contentDescription = iconInfo.second,
-//                        modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = "${item.estimatedTimeMinutes} min",
@@ -140,7 +147,28 @@ fun ContentCardPreview() {
     StillpointTheme {
         Surface {
             Box(modifier = Modifier.padding(8.dp)) {
-                ContentCard(item = item, onClick = {}, isStart = false, isEnd = false)
+                ContentCard(item = item, isSelected = false, isStart = false, isEnd = false)
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ContentCardSelectedPreview() {
+    val item = ContentItem(
+        url = "https://example.com",
+        title = "The Art of Doing Nothing: How to Be More Productive by Taking a Break",
+        description = "A deep dive into the benefits of resting.",
+        imageUrl = "https://picsum.photos/seed/picsum/200/300",
+        sourceName = "verylongsourcename.thatshouldbeellipsized.com",
+        type = ContentType.ARTICLE,
+        estimatedTimeMinutes = 15
+    )
+    StillpointTheme {
+        Surface {
+            Box(modifier = Modifier.padding(8.dp)) {
+                ContentCard(item = item, isSelected = true, isStart = false, isEnd = false)
             }
         }
     }

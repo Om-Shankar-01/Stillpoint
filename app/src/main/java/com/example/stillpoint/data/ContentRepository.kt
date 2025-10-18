@@ -13,12 +13,16 @@ import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
 
+data class ArticleContent(val title: String, val body: String)
+
 interface ContentRepository {
     fun getAllItems() : Flow<List<ContentItem>>
     fun getArchivedItems() : Flow<List<ContentItem>>
     suspend fun saveContentFromUrl(url: String) : Result<Unit>
     suspend fun deleteItem(item: ContentItem)
+    suspend fun deleteMultipleItems(items: List<ContentItem>)
     suspend fun archiveItem(item: ContentItem)
+    suspend fun getArticleContent(url: String) : Result<ArticleContent>
 }
 
 class CachingContentRepository(private val contentDao: ContentDao) : ContentRepository {
@@ -95,9 +99,30 @@ class CachingContentRepository(private val contentDao: ContentDao) : ContentRepo
         }
     }
 
+    override suspend fun deleteMultipleItems(items: List<ContentItem>) {
+        withContext(Dispatchers.IO) {
+            contentDao.deleteMultipleItems(items)
+        }
+    }
+
     override suspend fun archiveItem(item: ContentItem) {
         withContext(Dispatchers.IO) {
             contentDao.updateItem(item.copy(isArchived = true))
+        }
+    }
+
+    override suspend fun getArticleContent(url: String): Result<ArticleContent> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val doc = Jsoup.connect(url).get()
+                val title = doc.title()
+                // TODO: Extract the article content from the HTML in a better fashion
+                val body = doc.body().text()
+                Result.success(ArticleContent(title, body))
+            } catch (e: Exception) {
+                Log.e("ContentRepository", "Failed to fetch article content for $url", e)
+                Result.failure(e)
+            }
         }
     }
 

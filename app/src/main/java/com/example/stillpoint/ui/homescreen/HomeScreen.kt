@@ -1,8 +1,10 @@
-package com.example.stillpoint.ui.screens.homescreen
+package com.example.stillpoint.ui.homescreen
 
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +25,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -31,19 +32,20 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,14 +58,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.stillpoint.data.local.ContentItem
+import com.example.stillpoint.data.local.TimeFilter
 import com.example.stillpoint.ui.Archive
 import com.example.stillpoint.ui.QueueViewModel
 import com.example.stillpoint.ui.Reader
-import com.example.stillpoint.ui.TimeFilter
 import com.example.stillpoint.ui.UiEvent
-import com.example.stillpoint.ui.screens.ArchiveScreen
 import com.example.stillpoint.ui.theme.bodyFontFamily
-import com.example.stillpoint.ui.theme.headingFontFamily
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -72,11 +73,13 @@ fun HomeScreen(
     viewModel: QueueViewModel = hiltViewModel<QueueViewModel>()
 ) {
     val items by viewModel.filteredItems.collectAsStateWithLifecycle()
+    var selectionItems by rememberSaveable { mutableStateOf(setOf<ContentItem>()) }
 
     val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
 
     // Dialog state variable
     val isDialogVisible by viewModel.isAddDialogVisible.collectAsStateWithLifecycle()
+    var inSelection by rememberSaveable { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -138,13 +141,13 @@ fun HomeScreen(
                 ) {
                     items(items, key = { it.id }) { item ->
                         val dismissState = rememberSwipeToDismissBoxState()
+                        val isItemSelected = selectionItems.contains(item)
 
                         LaunchedEffect(dismissState.currentValue) {
                             when (dismissState.currentValue) {
                                 SwipeToDismissBoxValue.EndToStart -> viewModel.deleteItem(item)
                                 SwipeToDismissBoxValue.StartToEnd -> viewModel.archiveItem(item)
-                                SwipeToDismissBoxValue.Settled -> { /* Eat 5 Star */
-                                }
+                                SwipeToDismissBoxValue.Settled -> { /* Eat 5 Star */ }
                             }
                         }
 
@@ -191,9 +194,36 @@ fun HomeScreen(
                         ) {
                             ContentCard(
                                 item = item,
-                                onClick = { navController.navigate(Reader(url = item.url)) },
+//                                onClick = { navController.navigate(Reader(url = item.url)) },
+                                isSelected = isItemSelected,
                                 isStart = items.indexOf(item) == 0,
-                                isEnd = items.indexOf(item) == items.lastIndex
+                                isEnd = items.indexOf(item) == items.lastIndex,
+                                modifier = Modifier.combinedClickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    onClick = {
+                                        if (!inSelection) navController.navigate(Reader(url = item.url))
+                                        else {
+                                            if (isItemSelected)
+                                                selectionItems -= item
+                                            else
+                                                selectionItems += item
+
+                                            if (selectionItems.isEmpty())
+                                                inSelection = false
+                                        }
+                                    },
+                                    onLongClick = {
+                                        if (isItemSelected) {
+                                            selectionItems -= item
+                                            if (selectionItems.isEmpty())
+                                                inSelection = false
+                                        } else {
+                                            if (!inSelection)
+                                                inSelection = true
+                                            selectionItems += item
+                                        }
+                                    }
+                                )
                             )
                         }
                     }

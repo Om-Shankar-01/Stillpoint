@@ -21,7 +21,7 @@ object AppModule {
     }
 
     @Provides
-    @Singleton /* Ensure that there is only one instance of the DAO. */
+    @Singleton
     fun provideContentDao (database: ContentDatabase) : ContentDao = database.contentDao()
 
     @Provides

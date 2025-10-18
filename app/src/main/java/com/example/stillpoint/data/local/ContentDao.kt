@@ -19,6 +19,8 @@ interface ContentDao {
     fun getArchivedItems() : Flow<List<ContentItem>>
 
     @Delete
+    suspend fun deleteMultipleItems(items: List<ContentItem>)
+    @Delete
     suspend fun deleteItem(item: ContentItem)
 
     @Update // <-- Add the Update function

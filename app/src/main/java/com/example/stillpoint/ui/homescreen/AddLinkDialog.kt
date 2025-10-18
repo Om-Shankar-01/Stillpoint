@@ -1,4 +1,4 @@
-package com.example.stillpoint.ui.screens.homescreen
+package com.example.stillpoint.ui.homescreen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
