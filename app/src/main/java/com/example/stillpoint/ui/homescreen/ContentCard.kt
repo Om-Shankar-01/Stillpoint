@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -69,11 +70,11 @@ fun ContentCard(
         ) {
             Box(
                 modifier = Modifier
-                    .width(90.dp)
+                    .width(100.dp)
                     .padding(8.dp)
                     .clip(RoundedCornerShape(size = 8.dp))
                     .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -93,16 +94,15 @@ fun ContentCard(
             ) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = item.sourceName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -120,10 +120,13 @@ fun ContentCard(
                     Icon(
                         imageVector = iconInfo.first,
                         contentDescription = iconInfo.second,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "${item.estimatedTimeMinutes} min",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -140,7 +143,7 @@ fun ContentCardPreview() {
         title = "The Art of Doing Nothing: How to Be More Productive by Taking a Break",
         description = "A deep dive into the benefits of resting.",
         imageUrl = "https://picsum.photos/seed/picsum/200/300",
-        sourceName = "verylongsourcename.thatshouldbeellipsized.com",
+        sourceName = "source.com",
         type = ContentType.ARTICLE,
         estimatedTimeMinutes = 15
     )
@@ -148,27 +151,6 @@ fun ContentCardPreview() {
         Surface {
             Box(modifier = Modifier.padding(8.dp)) {
                 ContentCard(item = item, isSelected = false, isStart = false, isEnd = false)
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun ContentCardSelectedPreview() {
-    val item = ContentItem(
-        url = "https://example.com",
-        title = "The Art of Doing Nothing: How to Be More Productive by Taking a Break",
-        description = "A deep dive into the benefits of resting.",
-        imageUrl = "https://picsum.photos/seed/picsum/200/300",
-        sourceName = "verylongsourcename.thatshouldbeellipsized.com",
-        type = ContentType.ARTICLE,
-        estimatedTimeMinutes = 15
-    )
-    StillpointTheme {
-        Surface {
-            Box(modifier = Modifier.padding(8.dp)) {
-                ContentCard(item = item, isSelected = true, isStart = false, isEnd = false)
             }
         }
     }

@@ -7,13 +7,10 @@ import com.example.stillpoint.data.local.ContentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
-import java.net.SocketTimeoutException
 import java.net.URL
-import java.net.UnknownHostException
 
-data class ArticleContent(val title: String, val body: String)
+data class ArticleContent(val title: String?, val body: String?)
 
 interface ContentRepository {
     fun getAllItems() : Flow<List<ContentItem>>
@@ -25,7 +22,10 @@ interface ContentRepository {
     suspend fun getArticleContent(url: String) : Result<ArticleContent>
 }
 
-class CachingContentRepository(private val contentDao: ContentDao) : ContentRepository {
+class CachingContentRepository(
+    private val contentDao: ContentDao,
+    private val webContentExtractor: WebContentExtractor
+) : ContentRepository {
     override fun getAllItems(): Flow<List<ContentItem>> {
         return contentDao.getAllItems()
     }
@@ -37,15 +37,24 @@ class CachingContentRepository(private val contentDao: ContentDao) : ContentRepo
     override suspend fun saveContentFromUrl(url: String) : Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                // Fetch HTML Content from the URL
-                val doc = Jsoup.connect(url).get()
+                // Fetch HTML Content from the URL with a proper User-Agent to avoid 403s
+                val doc = Jsoup.connect(url)
+                    .userAgent(USER_AGENT)
+                    .timeout(10000)
+                    .get()
+
                 // Get the title
                 val title = doc.title()
 
                 /*** Extract the text and calculate an approximate reading time ***/
                 val siteText = doc.body().text()
-                val wordCount = siteText.split("\\s+".toRegex()).size
-                val estimatedTimeMinutes = (wordCount / 230).coerceAtLeast(1)
+                val words = siteText.split("\\s+".toRegex()).filter { it.isNotBlank() }
+                val wordCount = words.size
+                
+                // Refined reading time: 225 words per minute + 12 seconds per image
+                val imageCount = doc.select("img").size
+                val totalSeconds = (wordCount / 225.0 * 60) + (imageCount * 12)
+                val estimatedTimeMinutes = (totalSeconds / 60).toInt().coerceAtLeast(1)
 
                 // Extracting the Description
                 var description = doc.select("meta[property=og:description]").attr("content")
@@ -58,7 +67,11 @@ class CachingContentRepository(private val contentDao: ContentDao) : ContentRepo
                 Log.i("Image URL", imageUrl)
 
                 // Get the source name from URL
-                val sourceName = URL(url).host.replace("www.", "")
+                val sourceName = try {
+                    URL(url).host.replace("www.", "")
+                } catch (e: Exception) {
+                    "Web"
+                }
 
                 val contentItem = ContentItem(
                     url = url,
@@ -76,18 +89,6 @@ class CachingContentRepository(private val contentDao: ContentDao) : ContentRepo
                 Result.success(Unit)
             } catch (e : Exception) {
                 Log.e(TAG, "Error scraping URL: $url", e)
-                when (e) {
-                    is HttpStatusException -> {
-                        Log.w(TAG, "HTTP Error fetching URL. Status=${e.statusCode}. Is the link correct?")
-                    }
-                    is SocketTimeoutException -> {
-                        Log.w(TAG, "Connection timed out. Check internet connection.")
-                    }
-                    is UnknownHostException -> {
-                        Log.w(TAG, "Could not resolve host. Check for typos in URL.")
-                    }
-                }
-
                 Result.failure(e)
             }
         }
@@ -114,13 +115,32 @@ class CachingContentRepository(private val contentDao: ContentDao) : ContentRepo
     override suspend fun getArticleContent(url: String): Result<ArticleContent> {
         return withContext(Dispatchers.IO) {
             try {
-                val doc = Jsoup.connect(url).get()
-                val title = doc.title()
-                // TODO: Extract the article content from the HTML in a better fashion
-                val body = doc.body().text()
-                Result.success(ArticleContent(title, body))
+                // 1. Check if we have it in the database
+                val localItem = contentDao.getItemByUrl(url)
+                if (localItem?.cachedContent != null) {
+                    Log.i(TAG, "Returning cached content for $url")
+                    return@withContext Result.success(ArticleContent(localItem.title, localItem.cachedContent))
+                }
+
+                // 2. Fetch and extract if not cached
+                val doc = Jsoup.connect(url)
+                    .userAgent(USER_AGENT)
+                    .timeout(10000)
+                    .followRedirects(true)
+                    .get()
+                
+                val articleContent = webContentExtractor.extractContent(url, doc)
+                Log.i(TAG, "Extracted content for: ${articleContent.title}")
+
+                // 3. Save to cache if we have a local item
+                if (localItem != null && articleContent.body != null) {
+                    contentDao.updateItem(localItem.copy(cachedContent = articleContent.body))
+                    Log.i(TAG, "Cached content for $url saved to database")
+                }
+
+                Result.success(articleContent)
             } catch (e: Exception) {
-                Log.e("ContentRepository", "Failed to fetch article content for $url", e)
+                Log.e(TAG, "Failed to fetch article content for $url", e)
                 Result.failure(e)
             }
         }
@@ -128,6 +148,7 @@ class CachingContentRepository(private val contentDao: ContentDao) : ContentRepo
 
     companion object {
         private const val TAG = "ContentRepository"
+        private const val USER_AGENT = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36"
     }
 
 }

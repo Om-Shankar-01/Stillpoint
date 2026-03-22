@@ -4,6 +4,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stillpoint.data.ContentRepository
+import com.example.stillpoint.data.UserPreferencesRepository
 import com.example.stillpoint.data.local.ContentItem
 import com.example.stillpoint.data.local.TimeFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,10 +20,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class QueueViewModel @Inject constructor(private val repository: ContentRepository) : ViewModel() {
+class QueueViewModel @Inject constructor(
+    private val repository: ContentRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
+) : ViewModel() {
     /* --- DIALOG STATE MANAGEMENT --- */
     private val _isAddDialogVisible = MutableStateFlow(false)
     val isAddDialogVisible: StateFlow<Boolean> = _isAddDialogVisible.asStateFlow()
+
+    private val _isEditNameDialogVisible = MutableStateFlow(false)
+    val isEditNameDialogVisible: StateFlow<Boolean> = _isEditNameDialogVisible.asStateFlow()
 
     // A channel for sending one-time "side effects" to the UI, like showing a toast.
     private val _uiEvent = Channel<UiEvent>()
@@ -34,6 +41,73 @@ class QueueViewModel @Inject constructor(private val repository: ContentReposito
 
     fun onDismissAddDialog() {
         _isAddDialogVisible.value = false
+    }
+
+    fun onShowEditNameDialog() {
+        _isEditNameDialogVisible.value = true
+    }
+
+    fun onDismissEditNameDialog() {
+        _isEditNameDialogVisible.value = false
+    }
+
+    /* --- USER PREFERENCES --- */
+    val userName: StateFlow<String> = userPreferencesRepository.userName
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "User"
+        )
+
+    fun updateUserName(newName: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateUserName(newName)
+            onDismissEditNameDialog()
+        }
+    }
+
+    /* --- SELECTION STATE --- */
+    private val _selectedItems = MutableStateFlow(setOf<ContentItem>())
+    val selectedItems: StateFlow<Set<ContentItem>> = _selectedItems.asStateFlow()
+
+    private val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode: StateFlow<Boolean> = _isSelectionMode.asStateFlow()
+
+    fun toggleSelection(item: ContentItem) {
+        val currentSelected = _selectedItems.value
+        if (currentSelected.contains(item)) {
+            val newSelected = currentSelected - item
+            _selectedItems.value = newSelected
+            if (newSelected.isEmpty()) {
+                _isSelectionMode.value = false
+            }
+        } else {
+            _selectedItems.value = currentSelected + item
+            _isSelectionMode.value = true
+        }
+    }
+
+    fun clearSelection() {
+        _selectedItems.value = emptySet()
+        _isSelectionMode.value = false
+    }
+
+    fun archiveSelectedItems() {
+        val itemsToArchive = _selectedItems.value
+        viewModelScope.launch {
+            itemsToArchive.forEach { repository.archiveItem(it) }
+            clearSelection()
+            _uiEvent.send(UiEvent.ShowToast("Archived ${itemsToArchive.size} items"))
+        }
+    }
+
+    fun deleteSelectedItems() {
+        val itemsToDelete = _selectedItems.value.toList()
+        viewModelScope.launch {
+            repository.deleteMultipleItems(itemsToDelete)
+            clearSelection()
+            _uiEvent.send(UiEvent.ShowToast("Deleted ${itemsToDelete.size} items"))
+        }
     }
 
     private val _selectedFilter = MutableStateFlow(TimeFilter.ALL)

@@ -25,4 +25,7 @@ interface ContentDao {
 
     @Update // <-- Add the Update function
     suspend fun updateItem(item: ContentItem)
+
+    @Query("SELECT * FROM content_items WHERE url = :url LIMIT 1")
+    suspend fun getItemByUrl(url: String): ContentItem?
 }

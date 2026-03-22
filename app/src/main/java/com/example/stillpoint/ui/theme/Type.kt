@@ -15,93 +15,99 @@ val provider = GoogleFont.Provider(
     certificates = R.array.com_google_android_gms_fonts_certs
 )
 
-val headingFontName: GoogleFont = GoogleFont("Domine")
-val bodyFontName: GoogleFont = GoogleFont("Manrope")
-
+// Elegant serif for headings and titles
+val headingFontName: GoogleFont = GoogleFont("Google Sans Flex")
+// Modern, airy sans-serif for body and UI elements
+val bodyFontName: GoogleFont = GoogleFont("Plus Jakarta Sans")
 
 val headingFontFamily = FontFamily(
-    Font(googleFont = headingFontName, fontProvider = provider)
+    Font(googleFont = headingFontName, fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = headingFontName, fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = headingFontName, fontProvider = provider, weight = FontWeight.SemiBold),
+    Font(googleFont = headingFontName, fontProvider = provider, weight = FontWeight.Bold)
 )
+
 val bodyFontFamily = FontFamily(
-    Font(googleFont = bodyFontName, fontProvider = provider)
+    Font(googleFont = bodyFontName, fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = bodyFontName, fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = bodyFontName, fontProvider = provider, weight = FontWeight.SemiBold)
 )
 
-
-// Set of Material typography styles to start with
+// Set of Material typography styles optimized for reading and calm
 val Typography = Typography(
-    // Display Styles
+    // Display Styles - used for large headers
     displayLarge = TextStyle(
         fontFamily = headingFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 52.sp,
+        lineHeight = 60.sp,
+        letterSpacing = (-0.5).sp
     ),
     displayMedium = TextStyle(
         fontFamily = headingFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 40.sp,
+        lineHeight = 48.sp,
         letterSpacing = 0.sp
     ),
     displaySmall = TextStyle(
         fontFamily = headingFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
 
-    // Title Styles
+    // Title Styles - used for secondary headers and card titles
     titleLarge = TextStyle(
         fontFamily = headingFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
         letterSpacing = 0.sp
     ),
     titleMedium = TextStyle(
         fontFamily = headingFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
+        lineHeight = 26.sp,
+        letterSpacing = 0.1.sp
     ),
     titleSmall = TextStyle(
-        fontFamily = headingFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontFamily = bodyFontFamily, // Using sans for small UI titles for better legibility
+        fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
     ),
 
-    // Body Styles
+    // Body Styles - optimized for long-form reading comfort
     bodyLarge = TextStyle(
         fontFamily = bodyFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
+        fontSize = 18.sp,
+        lineHeight = 28.sp, // Generous line height (approx 1.55x)
+        letterSpacing = 0.2.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = bodyFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
         letterSpacing = 0.25.sp
     ),
     bodySmall = TextStyle(
         fontFamily = bodyFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.4.sp
     ),
 
-    // Label Styles (often used for buttons, captions)
+    // Label Styles - used for buttons and metadata
     labelLarge = TextStyle(
         fontFamily = bodyFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp

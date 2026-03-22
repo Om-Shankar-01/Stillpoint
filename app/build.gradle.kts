@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3.common.android)
 
@@ -84,6 +85,12 @@ dependencies {
 
     /* Google Fonts */
     implementation(libs.androidx.compose.ui.text.google.fonts)
+
+    /* Readability4J for Reader Screen */
+    implementation(libs.readability4j)
+
+    /* Rich Text Library for displaying HTML text */
+    implementation(libs.richeditor.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -3,6 +3,7 @@ package com.example.stillpoint.ui.homescreen
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Inventory2
@@ -32,20 +34,20 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,13 +60,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.stillpoint.data.local.ContentItem
 import com.example.stillpoint.data.local.TimeFilter
 import com.example.stillpoint.ui.Archive
 import com.example.stillpoint.ui.QueueViewModel
 import com.example.stillpoint.ui.Reader
 import com.example.stillpoint.ui.UiEvent
-import com.example.stillpoint.ui.theme.bodyFontFamily
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -73,13 +73,15 @@ fun HomeScreen(
     viewModel: QueueViewModel = hiltViewModel<QueueViewModel>()
 ) {
     val items by viewModel.filteredItems.collectAsStateWithLifecycle()
-    var selectionItems by rememberSaveable { mutableStateOf(setOf<ContentItem>()) }
+    val selectionItems by viewModel.selectedItems.collectAsStateWithLifecycle()
+    val inSelection by viewModel.isSelectionMode.collectAsStateWithLifecycle()
 
     val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
+    val userName by viewModel.userName.collectAsStateWithLifecycle()
 
     // Dialog state variable
     val isDialogVisible by viewModel.isAddDialogVisible.collectAsStateWithLifecycle()
-    var inSelection by rememberSaveable { mutableStateOf(false) }
+    val isEditNameDialogVisible by viewModel.isEditNameDialogVisible.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
 
@@ -100,7 +102,38 @@ fun HomeScreen(
         )
     }
 
+    if (isEditNameDialogVisible) {
+        EditNameDialog(
+            initialName = userName,
+            onDismiss = { viewModel.onDismissEditNameDialog() },
+            onSave = { newName -> viewModel.updateUserName(newName) }
+        )
+    }
+
     Scaffold(
+        topBar = {
+            if (inSelection) {
+                TopAppBar(
+                    title = { Text("${selectionItems.size} selected") },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.clearSelection() }) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear Selection")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { viewModel.archiveSelectedItems() }) {
+                            Icon(Icons.Default.Archive, contentDescription = "Archive Selected")
+                        }
+                        IconButton(onClick = { viewModel.deleteSelectedItems() }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete Selected")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                )
+            }
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { viewModel.onShowAddDialog() },
@@ -126,9 +159,10 @@ fun HomeScreen(
                     Text("Archive", fontWeight = FontWeight.Bold)
                 }
                 WelcomeSection(
-                    userName = "Om", /* TODO: Hardcoded for now */
+                    userName = userName,
                     selectedFilter = selectedFilter,
                     onFilterSelected = { filter -> viewModel.selectFilter(filter) },
+                    onNameClick = { viewModel.onShowEditNameDialog() }
                 )
             }
             if (items.isEmpty()) {
@@ -141,7 +175,6 @@ fun HomeScreen(
                 ) {
                     items(items, key = { it.id }) { item ->
                         val dismissState = rememberSwipeToDismissBoxState()
-                        val isItemSelected = selectionItems.contains(item)
 
                         LaunchedEffect(dismissState.currentValue) {
                             when (dismissState.currentValue) {
@@ -194,34 +227,20 @@ fun HomeScreen(
                         ) {
                             ContentCard(
                                 item = item,
-//                                onClick = { navController.navigate(Reader(url = item.url)) },
-                                isSelected = isItemSelected,
+                                isSelected = selectionItems.contains(item),
                                 isStart = items.indexOf(item) == 0,
                                 isEnd = items.indexOf(item) == items.lastIndex,
                                 modifier = Modifier.combinedClickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     onClick = {
-                                        if (!inSelection) navController.navigate(Reader(url = item.url))
-                                        else {
-                                            if (isItemSelected)
-                                                selectionItems -= item
-                                            else
-                                                selectionItems += item
-
-                                            if (selectionItems.isEmpty())
-                                                inSelection = false
+                                        if (inSelection) {
+                                            viewModel.toggleSelection(item)
+                                        } else {
+                                            navController.navigate(Reader(url = item.url))
                                         }
                                     },
                                     onLongClick = {
-                                        if (isItemSelected) {
-                                            selectionItems -= item
-                                            if (selectionItems.isEmpty())
-                                                inSelection = false
-                                        } else {
-                                            if (!inSelection)
-                                                inSelection = true
-                                            selectionItems += item
-                                        }
+                                        viewModel.toggleSelection(item)
                                     }
                                 )
                             )
@@ -239,6 +258,7 @@ fun WelcomeSection(
     userName: String,
     selectedFilter: TimeFilter,
     onFilterSelected: (TimeFilter) -> Unit,
+    onNameClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -248,9 +268,9 @@ fun WelcomeSection(
         Spacer(Modifier.size(80.dp))
         Text(
             text = "Hello, $userName",
-            fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.displayMedium,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.clickable { onNameClick() }
         )
         Spacer(modifier = Modifier.size(8.dp))
         Text(
@@ -268,7 +288,7 @@ fun WelcomeSection(
                 FilterChip(
                     selected = (filter == selectedFilter),
                     onClick = { onFilterSelected(filter) },
-                    label = { Text(filter.displayText) },
+                    label = { Text(filter.displayText, style = MaterialTheme.typography.labelLarge) },
                     leadingIcon = if (filter == selectedFilter) {
                         {
                             Icon(
@@ -299,8 +319,7 @@ fun EmptyQueueView() {
             text = "Your queue is ready.\nShare an article or video to begin!",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = bodyFontFamily
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
 }
-

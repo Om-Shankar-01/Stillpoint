@@ -22,8 +22,8 @@ abstract class ContentDatabase : RoomDatabase() {
         fun getDatabase(context: Context): ContentDatabase {
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, ContentDatabase::class.java, "stillpoint_database")
-                    .fallbackToDestructiveMigration(false)
-                    .addMigrations(MIGRATION_1_2)
+                    .fallbackToDestructiveMigration(true)
+//                    .addMigrations(MIGRATION_1_2)
                     .build()
                     .also { Instance = it }
             }
