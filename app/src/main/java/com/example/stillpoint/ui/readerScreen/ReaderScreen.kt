@@ -29,9 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -43,10 +40,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -67,7 +62,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -80,7 +74,6 @@ import com.example.stillpoint.data.ReaderSettings
 import com.example.stillpoint.data.ReaderTheme
 import com.example.stillpoint.ui.theme.headingFontFamily
 import java.net.URL
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -440,72 +433,6 @@ fun HtmlText(
             lineHeight = (settings.fontSize * 1.6).sp, // Maintain breathable line height
             color = colors.onBackground
         )
-    )
-}
-
-@Composable
-fun ReaderSettingsDialog(
-    currentSettings: ReaderSettings,
-    onDismiss: () -> Unit,
-    onFontSizeChange: (Int) -> Unit,
-    onFontTypeChange: (FontType) -> Unit,
-    onThemeChange: (ReaderTheme) -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Appearance", style = MaterialTheme.typography.titleLarge) },
-        text = {
-            Column {
-                Text("Font Size", style = MaterialTheme.typography.labelLarge)
-                Slider(
-                    value = currentSettings.fontSize.toFloat(),
-                    onValueChange = { onFontSizeChange(it.toInt()) },
-                    valueRange = 12f..32f,
-                    steps = 20
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Typography", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FontType.entries.forEach { type ->
-                        AssistChip(
-                            onClick = { onFontTypeChange(type) },
-                            label = {
-                                Text(
-                                    type.name.lowercase()
-                                        .replace('_', ' ')
-                                        .replaceFirstChar {
-                                            if (it.isLowerCase()) it.titlecase(
-                                                Locale.ROOT
-                                            ) else it.toString()
-                                        }, overflow = TextOverflow.Ellipsis)
-                            },
-                            border = if (currentSettings.fontType == type) null else AssistChipDefaults.assistChipBorder(
-                                enabled = true
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Reader Theme", style = MaterialTheme.typography.labelLarge)
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ReaderTheme.entries.forEach { theme ->
-                        ThemeColorButton(
-                            theme = theme,
-                            isSelected = currentSettings.theme == theme,
-                            onClick = { onThemeChange(theme) }
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Done", style = MaterialTheme.typography.labelLarge)
-            }
-        }
     )
 }
 

@@ -3,6 +3,7 @@ package com.example.stillpoint.ui.archivescreen
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +20,7 @@ import com.example.stillpoint.data.local.ContentItem
 fun ArchiveScreenAppBar (
     navController: NavController,
     deleteItemsAction: () -> Unit,
+    unarchiveItemsAction: () -> Unit,
     selectionItems: Set<ContentItem>,
     scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
@@ -30,7 +32,6 @@ fun ArchiveScreenAppBar (
         "Archive"
     }
 
-
     TopAppBar(
         title = { Text(topBarText) },
         navigationIcon = {
@@ -40,6 +41,9 @@ fun ArchiveScreenAppBar (
         },
         actions = {
             if (hasSelection) {
+                IconButton(onClick = { unarchiveItemsAction() }) {
+                    Icon(imageVector = Icons.Outlined.Unarchive, contentDescription = "Unarchive items")
+                }
                 IconButton(onClick = { deleteItemsAction() }) {
                     Icon(imageVector = Icons.Outlined.DeleteOutline, contentDescription = "Delete items")
                 }

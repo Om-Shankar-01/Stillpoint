@@ -37,15 +37,15 @@ fun WelcomeSection(
     scrollProgress: Float,
     modifier: Modifier = Modifier
 ) {
-    val topPadding = 80.dp - (60.dp * scrollProgress)
+    val topPadding = 28.dp - (20.dp * scrollProgress)
     val titleScale = 1f - (0.2f * scrollProgress)
     val subTextAlpha = 1f - scrollProgress
-    val subTextHeight = 20.dp - (20.dp * scrollProgress)
+    val subTextHeight = 12.dp - (12.dp * scrollProgress)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Spacer(Modifier.size(topPadding))
         Text(

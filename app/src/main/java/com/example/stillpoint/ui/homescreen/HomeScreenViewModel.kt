@@ -1,12 +1,13 @@
-package com.example.stillpoint.ui
+package com.example.stillpoint.ui.homescreen
 
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.stillpoint.data.ContentRepository
 import com.example.stillpoint.data.UserPreferencesRepository
 import com.example.stillpoint.data.local.ContentItem
 import com.example.stillpoint.data.local.TimeFilter
+import com.example.stillpoint.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,16 +21,43 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class QueueViewModel @Inject constructor(
+class HomeScreenViewModel @Inject constructor(
     private val repository: ContentRepository,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
+    /* ---- DELETION STATE MANAGEMENT ---- */
+    private val _itemToDelete = MutableStateFlow<ContentItem?>(null)
+    val itemToDelete: StateFlow<ContentItem?> = _itemToDelete.asStateFlow()
+
+    fun onSwipeToDelete(item: ContentItem) {
+        _itemToDelete.value = item
+    }
+
+    fun confirmSingleDeletion () {
+        val item = _itemToDelete.value
+        if (item != null) {
+            viewModelScope.launch {
+                deleteItem(item)
+                _uiEvent.send(UiEvent.ShowToast("Item deleted"))
+            }
+        }
+        _itemToDelete.value = null
+    }
+
+    fun cancelDeletion() {
+        _itemToDelete.value = null
+    }
+
     /* --- DIALOG STATE MANAGEMENT --- */
     private val _isAddDialogVisible = MutableStateFlow(false)
     val isAddDialogVisible: StateFlow<Boolean> = _isAddDialogVisible.asStateFlow()
 
     private val _isEditNameDialogVisible = MutableStateFlow(false)
     val isEditNameDialogVisible: StateFlow<Boolean> = _isEditNameDialogVisible.asStateFlow()
+
+    private val _isMultiDeleteDialogVisible = MutableStateFlow(false)
+    val isMultiDeleteDialogVisible: StateFlow<Boolean> = _isMultiDeleteDialogVisible.asStateFlow()
+
 
     // A channel for sending one-time "side effects" to the UI, like showing a toast.
     private val _uiEvent = Channel<UiEvent>()
@@ -50,6 +78,15 @@ class QueueViewModel @Inject constructor(
     fun onDismissEditNameDialog() {
         _isEditNameDialogVisible.value = false
     }
+
+    fun onShowMultiDeleteDialog() {
+        _isMultiDeleteDialogVisible.value = true
+    }
+
+    fun onDismissMultiDeleteDialog() {
+        _isMultiDeleteDialogVisible.value = false
+    }
+
 
     /* --- USER PREFERENCES --- */
     val userName: StateFlow<String> = userPreferencesRepository.userName
@@ -106,6 +143,7 @@ class QueueViewModel @Inject constructor(
         viewModelScope.launch {
             repository.deleteMultipleItems(itemsToDelete)
             clearSelection()
+            onDismissMultiDeleteDialog()
             _uiEvent.send(UiEvent.ShowToast("Deleted ${itemsToDelete.size} items"))
         }
     }
@@ -132,13 +170,6 @@ class QueueViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val archivedItems: StateFlow<List<ContentItem>> = repository.getArchivedItems()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
     val selectedFilter: StateFlow<TimeFilter> = _selectedFilter.asStateFlow()
 
     fun selectFilter(filter: TimeFilter) {
@@ -149,12 +180,7 @@ class QueueViewModel @Inject constructor(
     fun deleteItem(item: ContentItem) {
         viewModelScope.launch {
             repository.deleteItem(item)
-        }
-    }
-
-    fun deleteMultipleItems(items: List<ContentItem>) {
-        viewModelScope.launch {
-            repository.deleteMultipleItems(items)
+            _uiEvent.send(UiEvent.ShowToast("Item deleted"))
         }
     }
 
@@ -162,6 +188,7 @@ class QueueViewModel @Inject constructor(
     fun archiveItem(item: ContentItem) {
         viewModelScope.launch {
             repository.archiveItem(item)
+            _uiEvent.send(UiEvent.ShowToast("Item archived"))
         }
     }
 
@@ -185,10 +212,3 @@ class QueueViewModel @Inject constructor(
         }
     }
 }
-
-// A sealed class to represent events we send to the UI
-sealed class UiEvent {
-    data class ShowToast(val message: String) : UiEvent()
-}
-
-

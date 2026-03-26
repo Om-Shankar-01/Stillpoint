@@ -2,7 +2,6 @@ package com.example.stillpoint.ui.homescreen
 
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,14 +22,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -50,13 +47,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.stillpoint.ui.Archive
-import com.example.stillpoint.ui.QueueViewModel
 import com.example.stillpoint.ui.Reader
 import com.example.stillpoint.ui.UiEvent
 
@@ -64,7 +59,8 @@ import com.example.stillpoint.ui.UiEvent
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: QueueViewModel = hiltViewModel<QueueViewModel>()
+    onOpenDrawer: () -> Unit,
+    viewModel: HomeScreenViewModel = hiltViewModel<HomeScreenViewModel>()
 ) {
     val items by viewModel.filteredItems.collectAsStateWithLifecycle()
     val selectionItems by viewModel.selectedItems.collectAsStateWithLifecycle()
@@ -72,10 +68,12 @@ fun HomeScreen(
 
     val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
     val userName by viewModel.userName.collectAsStateWithLifecycle()
+    val itemToDelete by viewModel.itemToDelete.collectAsStateWithLifecycle()
 
     // Dialog state variable
-    val isDialogVisible by viewModel.isAddDialogVisible.collectAsStateWithLifecycle()
+    val isAddDialogVisible by viewModel.isAddDialogVisible.collectAsStateWithLifecycle()
     val isEditNameDialogVisible by viewModel.isEditNameDialogVisible.collectAsStateWithLifecycle()
+    val isMultiDeleteDialogVisible by viewModel.isMultiDeleteDialogVisible.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
 
@@ -100,7 +98,7 @@ fun HomeScreen(
         }
     }
 
-    if (isDialogVisible) {
+    if (isAddDialogVisible) {
         AddLinkDialog(
             onDismiss = { viewModel.onDismissAddDialog() },
             onSave = { url -> viewModel.saveManuallyAddedLink(url) }
@@ -112,6 +110,21 @@ fun HomeScreen(
             initialName = userName,
             onDismiss = { viewModel.onDismissEditNameDialog() },
             onSave = { newName -> viewModel.updateUserName(newName) }
+        )
+    }
+
+    if (isMultiDeleteDialogVisible) {
+        MultiDeleteDialog(
+            onDismiss = { viewModel.onDismissMultiDeleteDialog() },
+            onConfirm = { viewModel.deleteSelectedItems() },
+            selectionSize = selectionItems.size
+        )
+    }
+
+    if (itemToDelete != null) {
+        DeleteDialog(
+            onDismiss = { viewModel.cancelDeletion() },
+            onConfirm = { viewModel.confirmSingleDeletion() }
         )
     }
 
@@ -129,7 +142,7 @@ fun HomeScreen(
                         IconButton(onClick = { viewModel.archiveSelectedItems() }) {
                             Icon(Icons.Default.Archive, contentDescription = "Archive Selected")
                         }
-                        IconButton(onClick = { viewModel.deleteSelectedItems() }) {
+                        IconButton(onClick = { viewModel.onShowMultiDeleteDialog() }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete Selected")
                         }
                     },
@@ -137,6 +150,15 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 )
+            } else {
+                TopAppBar(title = { "" }, navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Open Navigation Drawer"
+                        )
+                    }
+                })
             }
         },
         floatingActionButton = {
@@ -145,7 +167,7 @@ fun HomeScreen(
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add link manually")
                 Spacer(Modifier.width(4.dp))
-                Text("Add")
+                Text("Add", style = MaterialTheme.typography.bodyMedium)
             }
         }
     ) { paddingValues ->
@@ -154,23 +176,32 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            WelcomeSection(
+                userName = userName,
+                selectedFilter = selectedFilter,
+                onFilterSelected = { filter -> viewModel.selectFilter(filter) },
+                onNameClick = { viewModel.onShowEditNameDialog() },
+                scrollProgress = scrollProgress,
+            )
+
+            /***
+             * This was an earlier implementation of the Archive Button.
+             * Probably never to be used again. \(-__-)/
             Box {
-                OutlinedButton (
-                    onClick = { navController.navigate(Archive) },
-                    modifier = Modifier.padding(16.dp).align(Alignment.TopEnd)
-                ) {
-                    Icon(Icons.Outlined.Inventory2, contentDescription = "Archive")
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Text("Archive", fontWeight = FontWeight.Bold)
-                }
-                WelcomeSection(
-                    userName = userName,
-                    selectedFilter = selectedFilter,
-                    onFilterSelected = { filter -> viewModel.selectFilter(filter) },
-                    onNameClick = { viewModel.onShowEditNameDialog() },
-                    scrollProgress = scrollProgress,
-                )
+            OutlinedButton(
+            onClick = { navController.navigate(Archive) },
+            modifier = Modifier
+            .padding(16.dp)
+            .align(Alignment.TopEnd)
+            ) {
+            Icon(Icons.Outlined.Inventory2, contentDescription = "Archive")
+            Spacer(modifier = Modifier.size(6.dp))
+            Text("Archive", fontWeight = FontWeight.Bold)
             }
+
+            }
+             ***/
+
             if (items.isEmpty()) {
                 EmptyQueueView()
             } else {
@@ -185,9 +216,21 @@ fun HomeScreen(
 
                         LaunchedEffect(dismissState.currentValue) {
                             when (dismissState.currentValue) {
-                                SwipeToDismissBoxValue.EndToStart -> viewModel.deleteItem(item)
+                                SwipeToDismissBoxValue.EndToStart -> {
+                                    viewModel.onSwipeToDelete(item)
+                                }
+
                                 SwipeToDismissBoxValue.StartToEnd -> viewModel.archiveItem(item)
-                                SwipeToDismissBoxValue.Settled -> { /* Eat 5 Star */ }
+                                SwipeToDismissBoxValue.Settled -> { /* Eat 5 Star */
+                                }
+                            }
+                        }
+
+                        /* This Launched Effect block resets the swiped Delete action and returns
+                           the dismissState (of the Card) back to its original position */
+                        LaunchedEffect(itemToDelete) {
+                            if (itemToDelete == null && dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                                dismissState.reset()
                             }
                         }
 
@@ -198,13 +241,13 @@ fun HomeScreen(
                                     SwipeToDismissBoxValue.StartToEnd -> Triple(
                                         Color(0xFF2A712E),
                                         Icons.Default.Archive,
-                                        Alignment.CenterStart
+                                        Alignment.CenterStart,
                                     )
 
                                     SwipeToDismissBoxValue.EndToStart -> Triple(
                                         Color(0xFFAC2828),
                                         Icons.Default.Delete,
-                                        Alignment.CenterEnd
+                                        Alignment.CenterEnd,
                                     )
 
                                     else -> Triple(Color.Transparent, null, Alignment.CenterEnd)
@@ -272,7 +315,7 @@ fun EmptyQueueView() {
             text = "Your queue is ready.\nShare an article or video to begin!",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
     }
 }

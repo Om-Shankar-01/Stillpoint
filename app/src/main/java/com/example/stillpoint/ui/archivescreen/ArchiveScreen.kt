@@ -15,44 +15,70 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.stillpoint.data.local.ContentItem
-import com.example.stillpoint.ui.QueueViewModel
 import com.example.stillpoint.ui.Reader
+import com.example.stillpoint.ui.UiEvent
 import com.example.stillpoint.ui.homescreen.ContentCard
+import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
+import com.example.stillpoint.ui.homescreen.MultiDeleteDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveScreen(
     navController: NavController,
-    viewModel: QueueViewModel = hiltViewModel()
+    viewModel: ArchiveScreenViewModel = hiltViewModel()
 ) {
     val archivedItems by viewModel.archivedItems.collectAsStateWithLifecycle()
-    var selectionItems by rememberSaveable { mutableStateOf(setOf<ContentItem>()) }
+    val selectionItems by viewModel.selectedItems.collectAsStateWithLifecycle()
 
-    var inSelection by rememberSaveable { mutableStateOf(false) }
+    val inSelection by viewModel.isSelectionMode.collectAsStateWithLifecycle()
 
+    val isMultiDeleteDialogVisible by viewModel.isMultiDeleteDialogVisible.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    if (isMultiDeleteDialogVisible) {
+        MultiDeleteDialog(
+            onDismiss = { viewModel.onDismissMultiDeleteDialog() },
+            onConfirm = { viewModel.deleteSelectedItems() },
+            selectionSize = selectionItems.size
+        )
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            ArchiveScreenAppBar(
-                navController = navController,
-                deleteItemsAction = { viewModel.deleteMultipleItems(selectionItems.toList()) },
-                selectionItems = selectionItems,
-                scrollBehavior = scrollBehavior,
-            )
+                ArchiveScreenAppBar(
+                    navController = navController,
+                    deleteItemsAction = {
+                        viewModel.onShowMultiDeleteDialog()
+                    },
+                    unarchiveItemsAction = {
+                        viewModel.unarchiveSelectedItems()
+                    },
+                    selectionItems = selectionItems,
+                    scrollBehavior = scrollBehavior,
+                )
         }
     ) { paddingValues ->
         if (archivedItems.isEmpty()) {
@@ -85,23 +111,16 @@ fun ArchiveScreen(
                                 if (!inSelection) navController.navigate(Reader(url = item.url))
                                 else {
                                     if (isItemSelected)
-                                        selectionItems -= item
+                                        viewModel.toggleSelection(item)
                                     else
-                                        selectionItems += item
-
-                                    if (selectionItems.isEmpty())
-                                        inSelection = false
+                                        viewModel.toggleSelection(item)
                                 }
                             },
                             onLongClick = {
                                 if (isItemSelected) {
-                                    selectionItems -= item
-                                    if (selectionItems.isEmpty())
-                                        inSelection = false
+                                    viewModel.toggleSelection(item)
                                 } else {
-                                    if (!inSelection)
-                                        inSelection = true
-                                    selectionItems += item
+                                    viewModel.toggleSelection(item)
                                 }
                             }
                         )

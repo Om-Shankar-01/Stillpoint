@@ -2,33 +2,40 @@ package com.example.stillpoint.transitions
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.ui.unit.IntOffset
 
-private const val DURATION = 300
+private const val DURATION = 400
 
-// Simple card-like transition: Incoming screen slides in fully from the right,
-// while the outgoing screen shifts slightly to the left (parallax effect).
-fun AnimatedContentTransitionScope<*>.slideAndFadeIn() =
-    slideIntoContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.Start,
+// The incoming screen slides in from the right
+fun AnimatedContentTransitionScope<*>.stackIn() =
+    slideInHorizontally(
+        initialOffsetX = { it },
         animationSpec = tween(DURATION, easing = FastOutSlowInEasing)
-    ) + fadeIn(animationSpec = tween(DURATION))
+    )
 
-fun AnimatedContentTransitionScope<*>.slideAndFadeOut() =
-    slideOutOfContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.Start,
-        animationSpec = tween(DURATION, easing = FastOutSlowInEasing),
-        targetOffset = { -it / 4 }
-    ) + fadeOut(animationSpec = tween(DURATION))
-
-fun AnimatedContentTransitionScope<*>.slideAndFadeInBack() =
-    slideIntoContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.End,
-        animationSpec = tween(DURATION, easing = FastOutSlowInEasing),
-        initialOffset = { -it / 4 }
-    ) + fadeIn(animationSpec = tween(DURATION))
-
-fun AnimatedContentTransitionScope<*>.slideAndFadeOutBack() =
-    slideOutOfContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.End,
+// The outgoing screen slides slightly to the left and fades partially
+fun AnimatedContentTransitionScope<*>.stackOut() =
+    slideOutHorizontally(
+        targetOffsetX = { -it / 3 },
         animationSpec = tween(DURATION, easing = FastOutSlowInEasing)
-    ) + fadeOut(animationSpec = tween(DURATION))
+    ) + fadeOut(
+        animationSpec = tween(DURATION),
+        targetAlpha = 0.8f
+    )
+
+// The returning screen slides back from the left and fades back in
+fun AnimatedContentTransitionScope<*>.stackPopIn() =
+    slideInHorizontally(
+        initialOffsetX = { -it / 3 },
+        animationSpec = tween(DURATION, easing = FastOutSlowInEasing)
+    ) + fadeIn(
+        animationSpec = tween(DURATION),
+        initialAlpha = 0.8f
+    )
+
+// The top screen slides out to the right to reveal the one underneath
+fun AnimatedContentTransitionScope<*>.stackPopOut() =
+    slideOutHorizontally(
+        targetOffsetX = { it },
+        animationSpec = tween(DURATION, easing = FastOutSlowInEasing)
+    )

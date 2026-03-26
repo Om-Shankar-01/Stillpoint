@@ -19,6 +19,8 @@ interface ContentRepository {
     suspend fun deleteItem(item: ContentItem)
     suspend fun deleteMultipleItems(items: List<ContentItem>)
     suspend fun archiveItem(item: ContentItem)
+    suspend fun unarchiveItem(item: ContentItem)
+    suspend fun unarchiveMultipleItems(items: List<ContentItem>)
     suspend fun getArticleContent(url: String) : Result<ArticleContent>
 }
 
@@ -109,6 +111,20 @@ class CachingContentRepository(
     override suspend fun archiveItem(item: ContentItem) {
         withContext(Dispatchers.IO) {
             contentDao.updateItem(item.copy(isArchived = true))
+        }
+    }
+
+    override suspend fun unarchiveItem(item: ContentItem) {
+        withContext(Dispatchers.IO) {
+            contentDao.updateItem(item.copy(isArchived = false))
+        }
+    }
+
+    override suspend fun unarchiveMultipleItems(items: List<ContentItem>) {
+        withContext(Dispatchers.IO) {
+            items.forEach { item ->
+                contentDao.updateItem(item.copy(isArchived = false))
+            }
         }
     }
 
