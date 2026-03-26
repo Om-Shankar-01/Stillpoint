@@ -1,8 +1,12 @@
 package com.example.stillpoint.transitions
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 
 private const val DURATION = 400
 

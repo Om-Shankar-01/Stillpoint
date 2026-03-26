@@ -3,6 +3,7 @@ package com.example.stillpoint.ui.homescreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
@@ -43,6 +44,7 @@ fun EditNameDialog(
         confirmButton = {
             TextButton(onClick = { onSave(nameText) }, enabled = nameText.isNotBlank()) {
                 Icon(Icons.Filled.Done, contentDescription = "Save")
+                Spacer(modifier = Modifier.width(4.dp))
                 Text("Save")
             }
         },
