@@ -2,8 +2,8 @@ package com.example.stillpoint.ui.homescreen
 
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -12,27 +12,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,12 +51,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.stillpoint.data.local.TimeFilter
 import com.example.stillpoint.ui.Archive
 import com.example.stillpoint.ui.QueueViewModel
 import com.example.stillpoint.ui.Reader
@@ -84,6 +78,17 @@ fun HomeScreen(
     val isEditNameDialogVisible by viewModel.isEditNameDialogVisible.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+
+    val listState = rememberLazyListState()
+    val scrollProgress by remember {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex > 0) {
+                1f
+            } else {
+                (listState.firstVisibleItemScrollOffset / 300f).coerceIn(0f, 1f)
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
@@ -162,16 +167,18 @@ fun HomeScreen(
                     userName = userName,
                     selectedFilter = selectedFilter,
                     onFilterSelected = { filter -> viewModel.selectFilter(filter) },
-                    onNameClick = { viewModel.onShowEditNameDialog() }
+                    onNameClick = { viewModel.onShowEditNameDialog() },
+                    scrollProgress = scrollProgress,
                 )
             }
             if (items.isEmpty()) {
                 EmptyQueueView()
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(items, key = { it.id }) { item ->
                         val dismissState = rememberSwipeToDismissBoxState()
@@ -247,60 +254,6 @@ fun HomeScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun WelcomeSection(
-    userName: String,
-    selectedFilter: TimeFilter,
-    onFilterSelected: (TimeFilter) -> Unit,
-    onNameClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 20.dp)
-    ) {
-        Spacer(Modifier.size(80.dp))
-        Text(
-            text = "Hello, $userName",
-            style = MaterialTheme.typography.displayMedium,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.clickable { onNameClick() }
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(
-            text = "How much time do you have?",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Horizontal scrollable list of filter chips
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(TimeFilter.entries.toTypedArray(), key = { it.name }) { filter ->
-                FilterChip(
-                    selected = (filter == selectedFilter),
-                    onClick = { onFilterSelected(filter) },
-                    label = { Text(filter.displayText, style = MaterialTheme.typography.labelLarge) },
-                    leadingIcon = if (filter == selectedFilter) {
-                        {
-                            Icon(
-                                imageVector = Icons.Filled.Done,
-                                contentDescription = "Done icon",
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                )
             }
         }
     }

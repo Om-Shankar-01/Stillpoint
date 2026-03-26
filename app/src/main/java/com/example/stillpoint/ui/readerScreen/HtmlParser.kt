@@ -1,6 +1,5 @@
 package com.example.stillpoint.ui.readerScreen
 
-import android.util.Log
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
