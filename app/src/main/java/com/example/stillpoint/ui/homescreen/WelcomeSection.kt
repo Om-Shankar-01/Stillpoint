@@ -1,6 +1,5 @@
 package com.example.stillpoint.ui.homescreen
 
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -23,8 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.stillpoint.R
 import com.example.stillpoint.data.local.TimeFilter
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -89,7 +88,7 @@ fun WelcomeSection(
                     leadingIcon = if (filter == selectedFilter) {
                         {
                             Icon(
-                                imageVector = Icons.Filled.Done,
+                                painter = painterResource(R.drawable.icon_check),
                                 contentDescription = "Done icon",
                                 modifier = Modifier.size(FilterChipDefaults.IconSize)
                             )

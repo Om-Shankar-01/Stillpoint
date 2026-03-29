@@ -1,4 +1,4 @@
-package com.example.stillpoint.ui.readerScreen
+package com.example.stillpoint.ui.readerscreen
 
 import android.content.Context
 import android.content.Intent

@@ -1,4 +1,4 @@
-package com.example.stillpoint.ui.readerScreen
+package com.example.stillpoint.ui.readerscreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,11 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -20,8 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.stillpoint.R
 import com.example.stillpoint.data.FontType
 import com.example.stillpoint.data.ReaderSettings
 import com.example.stillpoint.data.ReaderTheme
@@ -69,8 +67,8 @@ fun ReaderSettingsDialog(
                             leadingIcon = if (currentSettings.fontType == type) {
                                 {
                                     Icon(
-                                        imageVector = Icons.Filled.Done,
-                                        contentDescription = "Done icon",
+                                        painter = painterResource(R.drawable.icon_check),
+                                        contentDescription = "Done",
                                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                                     )
                                 }
@@ -82,7 +80,7 @@ fun ReaderSettingsDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Reader Theme", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     ReaderTheme.entries.forEach { theme ->
                         ThemeColorButton(
                             theme = theme,

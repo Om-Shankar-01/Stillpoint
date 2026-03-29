@@ -13,10 +13,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
-
 enum class ReaderTheme { LIGHT, DARK, SEPIA, SYSTEM }
 enum class FontType { SANS_SERIF, SERIF, MONOSPACE }
+enum class AppTheme { LIGHT, DARK, SYSTEM }
 
 data class ReaderSettings(
     val fontSize: Int,
@@ -27,10 +26,12 @@ data class ReaderSettings(
 interface UserPreferencesRepository {
     val userName: Flow<String>
     val readerSettings: Flow<ReaderSettings>
+    val appTheme: Flow<AppTheme>
     suspend fun updateUserName(name: String)
     suspend fun updateFontSize(size: Int)
     suspend fun updateFontType(type: FontType)
     suspend fun updateReaderTheme(theme: ReaderTheme)
+    suspend fun updateAppTheme(theme: AppTheme)
 }
 
 class DataStoreUserPreferencesRepository(
@@ -42,6 +43,7 @@ class DataStoreUserPreferencesRepository(
         val FONT_SIZE = intPreferencesKey("reader_font_size")
         val FONT_TYPE = stringPreferencesKey("reader_font_type")
         val READER_THEME = stringPreferencesKey("reader_theme")
+        val APP_THEME = stringPreferencesKey("app_theme")
     }
 
     override val userName: Flow<String> = dataStore.data
@@ -72,6 +74,18 @@ class DataStoreUserPreferencesRepository(
             )
         }
 
+    override val appTheme: Flow<AppTheme> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { preferences ->
+            AppTheme.valueOf(preferences[PreferencesKeys.APP_THEME] ?: AppTheme.SYSTEM.name)
+        }
+
     override suspend fun updateUserName(name: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.USER_NAME] = name
@@ -93,6 +107,12 @@ class DataStoreUserPreferencesRepository(
     override suspend fun updateReaderTheme(theme: ReaderTheme) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.READER_THEME] = theme.name
+        }
+    }
+
+    override suspend fun updateAppTheme(theme: AppTheme) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.APP_THEME] = theme.name
         }
     }
 }

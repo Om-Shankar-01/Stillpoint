@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.stillpoint.data.ContentRepository
 import com.example.stillpoint.data.UserPreferencesRepository
 import com.example.stillpoint.data.local.ContentItem
+import com.example.stillpoint.data.local.ContentType
 import com.example.stillpoint.data.local.TimeFilter
 import com.example.stillpoint.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -103,7 +104,7 @@ class HomeScreenViewModel @Inject constructor(
         }
     }
 
-    /* --- SELECTION STATE --- */
+    /* ---- SELECTION STATE ---- */
     private val _selectedItems = MutableStateFlow(setOf<ContentItem>())
     val selectedItems: StateFlow<Set<ContentItem>> = _selectedItems.asStateFlow()
 
@@ -189,6 +190,20 @@ class HomeScreenViewModel @Inject constructor(
         viewModelScope.launch {
             repository.archiveItem(item)
             _uiEvent.send(UiEvent.ShowToast("Item archived"))
+        }
+    }
+
+    fun onItemClick(item: ContentItem) {
+        if (_isSelectionMode.value) {
+            toggleSelection(item)
+        } else {
+            viewModelScope.launch {
+                if (item.type == ContentType.VIDEO) {
+                    _uiEvent.send(UiEvent.OpenVideo(item.url))
+                } else {
+                    _uiEvent.send(UiEvent.NavigateToReader(item.url))
+                }
+            }
         }
     }
 

@@ -1,9 +1,5 @@
 package com.example.stillpoint.ui.archivescreen
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -12,7 +8,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import com.example.stillpoint.R
 import com.example.stillpoint.data.local.ContentItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,16 +34,16 @@ fun ArchiveScreenAppBar (
         title = { Text(topBarText) },
         navigationIcon = {
             IconButton(onClick = { navController.navigateUp() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(painter = painterResource(R.drawable.icon_arrow_back), contentDescription = "Back")
             }
         },
         actions = {
             if (hasSelection) {
                 IconButton(onClick = { unarchiveItemsAction() }) {
-                    Icon(imageVector = Icons.Outlined.Unarchive, contentDescription = "Unarchive items")
+                    Icon(painter = painterResource(R.drawable.icon_unarchive), contentDescription = "Unarchive items")
                 }
                 IconButton(onClick = { deleteItemsAction() }) {
-                    Icon(imageVector = Icons.Outlined.DeleteOutline, contentDescription = "Delete items")
+                    Icon(painter = painterResource(R.drawable.icon_delete), contentDescription = "Delete items")
                 }
             }
         },

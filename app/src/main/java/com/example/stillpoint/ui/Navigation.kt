@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object Archive
 
+@Serializable data object Settings
+
 // The reader screen needs the article's URL.
 // The serialization library will automatically handle encoding/decoding.
 @Serializable

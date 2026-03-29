@@ -1,4 +1,4 @@
-package com.example.stillpoint.ui.readerScreen
+package com.example.stillpoint.ui.readerscreen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -25,10 +25,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -53,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -69,6 +66,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.example.stillpoint.R
 import com.example.stillpoint.data.FontType
 import com.example.stillpoint.data.ReaderSettings
 import com.example.stillpoint.data.ReaderTheme
@@ -270,7 +268,11 @@ fun BoxScope.ReaderFloatingControls(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = colors.onBackground)
+                    Icon(
+                        painter = painterResource(R.drawable.icon_arrow_back),
+                        contentDescription = "Back",
+                        tint = colors.onBackground
+                    )
                 }
 
                 Box(
@@ -281,11 +283,19 @@ fun BoxScope.ReaderFloatingControls(
                 )
 
                 IconButton(onClick = onSettingsClick) {
-                    Icon(Icons.Default.Settings, "Appearance", tint = colors.onBackground)
+                    Icon(
+                        painter = painterResource(R.drawable.icon_settings_filled),
+                        contentDescription = "Appearance",
+                        tint = colors.onBackground
+                    )
                 }
 
                 IconButton(onClick = onBrowserClick) {
-                    Icon(Icons.Default.Language, "Open in Browser", tint = colors.onBackground)
+                    Icon(
+                        painter = painterResource(R.drawable.icon_open_in_browser),
+                        contentDescription = "Open in Browser",
+                        tint = colors.onBackground
+                    )
                 }
             }
         }

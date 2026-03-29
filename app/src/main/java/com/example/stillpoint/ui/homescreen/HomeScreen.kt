@@ -1,6 +1,8 @@
 package com.example.stillpoint.ui.homescreen
 
+import android.content.Intent
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -17,12 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -47,11 +43,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.stillpoint.R
 import com.example.stillpoint.ui.Reader
 import com.example.stillpoint.ui.UiEvent
 
@@ -92,7 +90,14 @@ fun HomeScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is UiEvent.OpenVideo -> {
+                    val intent = Intent(Intent.ACTION_VIEW, event.url.toUri())
+                    context.startActivity(intent)
+                }
+                is UiEvent.NavigateToReader -> {
+                    navController.navigate(Reader(url = event.url))
                 }
             }
         }
@@ -135,15 +140,24 @@ fun HomeScreen(
                     title = { Text("${selectionItems.size} selected") },
                     navigationIcon = {
                         IconButton(onClick = { viewModel.clearSelection() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear Selection")
+                            Icon(
+                                painter = painterResource(R.drawable.icon_close),
+                                contentDescription = "Clear Selection"
+                            )
                         }
                     },
                     actions = {
                         IconButton(onClick = { viewModel.archiveSelectedItems() }) {
-                            Icon(Icons.Default.Archive, contentDescription = "Archive Selected")
+                            Icon(
+                                painter = painterResource(R.drawable.icon_archive),
+                                contentDescription = "Archive Selected"
+                            )
                         }
                         IconButton(onClick = { viewModel.onShowMultiDeleteDialog() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete Selected")
+                            Icon(
+                                painter = painterResource(R.drawable.icon_delete),
+                                contentDescription = "Delete Selected"
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -151,11 +165,12 @@ fun HomeScreen(
                     )
                 )
             } else {
-                TopAppBar(title = { "" }, navigationIcon = {
+                TopAppBar(title = { Text("") }, navigationIcon = {
                     IconButton(onClick = onOpenDrawer) {
                         Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "Open Navigation Drawer"
+                            painter = painterResource(R.drawable.icon_menu),
+                            contentDescription = "Open Navigation Drawer",
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 })
@@ -165,9 +180,12 @@ fun HomeScreen(
             ExtendedFloatingActionButton(
                 onClick = { viewModel.onShowAddDialog() },
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add link manually")
+                Icon(
+                    painter = painterResource(R.drawable.icon_add),
+                    contentDescription = "Add link manually",
+                )
                 Spacer(Modifier.width(4.dp))
-                Text("Add", style = MaterialTheme.typography.bodyMedium)
+                Text("Add", style = MaterialTheme.typography.bodyLarge)
             }
         }
     ) { paddingValues ->
@@ -184,23 +202,25 @@ fun HomeScreen(
                 scrollProgress = scrollProgress,
             )
 
-            /***
-             * This was an earlier implementation of the Archive Button.
-             * Probably never to be used again. \(-__-)/
+            /* An earlier implementation of the Archive Button
+            Probably never to be used again. \(-_-)/
             Box {
-            OutlinedButton(
-            onClick = { navController.navigate(Archive) },
-            modifier = Modifier
-            .padding(16.dp)
-            .align(Alignment.TopEnd)
-            ) {
-            Icon(Icons.Outlined.Inventory2, contentDescription = "Archive")
-            Spacer(modifier = Modifier.size(6.dp))
-            Text("Archive", fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = { navController.navigate(Archive) },
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.icon_archive),
+                        contentDescription = "Archive"
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text("Archive", fontWeight = FontWeight.Bold)
+                }
             }
 
-            }
-             ***/
+            */
 
             if (items.isEmpty()) {
                 EmptyQueueView()
@@ -237,20 +257,27 @@ fun HomeScreen(
                         SwipeToDismissBox(
                             state = dismissState,
                             backgroundContent = {
-                                val (color, icon, alignment) = when (dismissState.dismissDirection) {
-                                    SwipeToDismissBoxValue.StartToEnd -> Triple(
-                                        Color(0xFF2A712E),
-                                        Icons.Default.Archive,
-                                        Alignment.CenterStart,
-                                    )
+                                val (color, iconPainter, alignment) = when (dismissState.dismissDirection) {
+                                    SwipeToDismissBoxValue.StartToEnd -> {
+                                        val painter = painterResource(R.drawable.icon_archive)
+                                        Triple(
+                                            Color(0xFF2A712E),
+                                            painter,
+                                            Alignment.CenterStart,
+                                        )
+                                    }
 
                                     SwipeToDismissBoxValue.EndToStart -> Triple(
                                         Color(0xFFAC2828),
-                                        Icons.Default.Delete,
+                                        painterResource(R.drawable.icon_delete),
                                         Alignment.CenterEnd,
                                     )
 
-                                    else -> Triple(Color.Transparent, null, Alignment.CenterEnd)
+                                    else -> Triple(
+                                        Color.Transparent,
+                                        null,
+                                        Alignment.CenterEnd
+                                    )
                                 }
                                 val scale by animateFloatAsState(
                                     targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.8f else 1.2f,
@@ -264,9 +291,9 @@ fun HomeScreen(
                                         .padding(horizontal = 20.dp),
                                     contentAlignment = alignment
                                 ) {
-                                    if (icon != null) {
+                                    if (iconPainter != null) {
                                         Icon(
-                                            icon,
+                                            painter = iconPainter,
                                             contentDescription = "Action Icon",
                                             modifier = Modifier.scale(scale),
                                             tint = Color.White
@@ -283,11 +310,7 @@ fun HomeScreen(
                                 modifier = Modifier.combinedClickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     onClick = {
-                                        if (inSelection) {
-                                            viewModel.toggleSelection(item)
-                                        } else {
-                                            navController.navigate(Reader(url = item.url))
-                                        }
+                                        viewModel.onItemClick(item)
                                     },
                                     onLongClick = {
                                         viewModel.toggleSelection(item)
@@ -301,7 +324,6 @@ fun HomeScreen(
         }
     }
 }
-
 
 @Composable
 fun EmptyQueueView() {

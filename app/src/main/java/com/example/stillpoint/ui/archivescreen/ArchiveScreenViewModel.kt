@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stillpoint.data.ContentRepository
 import com.example.stillpoint.data.local.ContentItem
+import com.example.stillpoint.data.local.ContentType
 import com.example.stillpoint.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -77,11 +78,12 @@ class ArchiveScreenViewModel @Inject constructor(
         _isSelectionMode.value = false
     }
 
-    /* --- UNARCHIVE FUNCTION --- */
+    /* ---- UNARCHIVE FUNCTION ---- */
     fun unarchiveSelectedItems() {
         val itemsToUnarchive = _selectedItems.value.toList()
         viewModelScope.launch {
             repository.unarchiveMultipleItems(itemsToUnarchive)
+            clearSelection()
             _uiEvent.send(UiEvent.ShowToast("Unarchived ${itemsToUnarchive.size} items"))
         }
     }
@@ -93,6 +95,20 @@ class ArchiveScreenViewModel @Inject constructor(
             clearSelection()
             onDismissMultiDeleteDialog()
             _uiEvent.send(UiEvent.ShowToast("Deleted ${itemsToDelete.size} items"))
+        }
+    }
+
+    fun onItemClick(item: ContentItem) {
+        if (_isSelectionMode.value) {
+            toggleSelection(item)
+        } else {
+            viewModelScope.launch {
+                if (item.type == ContentType.VIDEO) {
+                    _uiEvent.send(UiEvent.OpenVideo(item.url))
+                } else {
+                    _uiEvent.send(UiEvent.NavigateToReader(item.url))
+                }
+            }
         }
     }
 }

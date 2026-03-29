@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.OndemandVideo
-import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -31,11 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.example.stillpoint.R
 import com.example.stillpoint.data.local.ContentItem
 import com.example.stillpoint.data.local.ContentType
 import com.example.stillpoint.ui.theme.StillpointTheme
@@ -113,16 +111,26 @@ fun ContentCard(
                     modifier = Modifier.height(IntrinsicSize.Min)
                 ) {
                     val iconInfo = if (item.type == ContentType.ARTICLE) {
-                        Pair(Icons.Default.Web, "Article")
+                        Pair(painterResource(R.drawable.icon_news), "Article")
                     } else {
-                        Pair(Icons.Default.OndemandVideo, "Video")
+                        // Use Material icon for video as no replacement exists
+                        Pair(null, "Video")
                     }
-                    Icon(
-                        imageVector = iconInfo.first,
-                        contentDescription = iconInfo.second,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    if (iconInfo.first != null) {
+                        Icon(
+                            painter = iconInfo.first!!,
+                            contentDescription = iconInfo.second,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(R.drawable.icon_on_demand_video),
+                            contentDescription = iconInfo.second,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     Text(
                         text = "${item.estimatedTimeMinutes} min",
                         style = MaterialTheme.typography.labelSmall,

@@ -1,6 +1,8 @@
 package com.example.stillpoint.ui.archivescreen
 
+import android.content.Intent
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -53,10 +55,18 @@ fun ArchiveScreen(
                 is UiEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
+                is UiEvent.OpenVideo -> {
+                    val intent = Intent(Intent.ACTION_VIEW, event.url.toUri())
+                    context.startActivity(intent)
+                }
+                is UiEvent.NavigateToReader -> {
+                    navController.navigate(Reader(url = event.url))
+                }
             }
         }
     }
 
+    /* ---- DELETE DIALOG ---- */
     if (isMultiDeleteDialogVisible) {
         MultiDeleteDialog(
             onDismiss = { viewModel.onDismissMultiDeleteDialog() },
@@ -65,6 +75,7 @@ fun ArchiveScreen(
         )
     }
 
+    /* ---- SCREEN SCAFFOLD ---- */
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -108,20 +119,10 @@ fun ArchiveScreen(
                         modifier = Modifier.combinedClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             onClick = {
-                                if (!inSelection) navController.navigate(Reader(url = item.url))
-                                else {
-                                    if (isItemSelected)
-                                        viewModel.toggleSelection(item)
-                                    else
-                                        viewModel.toggleSelection(item)
-                                }
+                                viewModel.onItemClick(item)
                             },
                             onLongClick = {
-                                if (isItemSelected) {
-                                    viewModel.toggleSelection(item)
-                                } else {
-                                    viewModel.toggleSelection(item)
-                                }
+                                viewModel.toggleSelection(item)
                             }
                         )
                     )

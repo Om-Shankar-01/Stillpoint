@@ -1,13 +1,9 @@
-package com.example.stillpoint.ui.readerScreen
+package com.example.stillpoint.ui.readerscreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarScrollBehavior
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -21,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.stillpoint.R
 import com.example.stillpoint.ui.components.IconButtonWithTooltipBox
 
 @ExperimentalMaterial3ExpressiveApi()
@@ -41,7 +38,7 @@ fun ReaderControlsToolbar(
     ) {
         IconButtonWithTooltipBox(
             onClick = { navController.navigateUp() },
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            icon = R.drawable.icon_arrow_back,
             descriptor = "Back",
             tint = MaterialTheme.colorScheme.onBackground
         )
@@ -56,17 +53,16 @@ fun ReaderControlsToolbar(
 
         IconButtonWithTooltipBox(
             onClick = onSettingsClick,
-            icon = Icons.Default.Settings,
+            icon = R.drawable.icon_format_size,
             descriptor = "Appearance",
             tint = MaterialTheme.colorScheme.onBackground
         )
 
         IconButtonWithTooltipBox(
             onClick = onBrowserClick,
-            icon = Icons.Default.Language,
+            icon = R.drawable.icon_open_in_browser,
             descriptor = "Open in Browser",
             tint = MaterialTheme.colorScheme.onBackground
         )
     }
 }
-

@@ -44,6 +44,7 @@ captures/
 *.ipr
 *~
 *.swp
+/*/secret.properties
 
 # Keystore files
 *.jks
