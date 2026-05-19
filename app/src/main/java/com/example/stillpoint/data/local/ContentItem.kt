@@ -15,7 +15,8 @@ data class ContentItem (
     val estimatedTimeMinutes: Int,
     val addedAt: Long = System.currentTimeMillis(),
     val isArchived : Boolean = false,
-    val cachedContent: String? = null
+    val cachedContent: String? = null,
+    val languageCode: String? = "en"
 )
 
 enum class ContentType {

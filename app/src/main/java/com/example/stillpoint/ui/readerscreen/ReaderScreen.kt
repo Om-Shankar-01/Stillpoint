@@ -81,6 +81,7 @@ fun ReaderScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val ttsState by viewModel.ttsState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val context = LocalContext.current
     val exitAlwaysScrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(
@@ -199,6 +200,8 @@ fun ReaderScreen(
                 navController = navController,
                 onSettingsClick = { viewModel.toggleSettings() },
                 onBrowserClick = { viewModel.openInBrowser(context) },
+                onPlaybackClick = { viewModel.togglePlayback() },
+                ttsState = ttsState,
                 scrollBehavior = exitAlwaysScrollBehavior,
                 modifier =
                     Modifier

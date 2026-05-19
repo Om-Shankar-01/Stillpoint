@@ -14,13 +14,18 @@ import com.example.stillpoint.data.ReaderSettings
 import com.example.stillpoint.data.ReaderTheme
 import com.example.stillpoint.data.UserPreferencesRepository
 import com.example.stillpoint.ui.Reader
+import com.example.stillpoint.utils.TtsManager
+import com.example.stillpoint.utils.TtsState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
 import javax.inject.Inject
 
 data class ReaderUiState (
@@ -35,6 +40,7 @@ data class ReaderUiState (
 class ReaderViewModel @Inject constructor(
     private val repository: ContentRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val ttsManager: TtsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -48,6 +54,8 @@ class ReaderViewModel @Inject constructor(
             initialValue = ReaderSettings(18, FontType.SANS_SERIF, ReaderTheme.SYSTEM)
         )
 
+    val ttsState : StateFlow<TtsState> = ttsManager.ttsState
+
     init {
         // Retrieve the URL argument passed via navigation.
         val readerRoute: Reader = savedStateHandle.toRoute()
@@ -60,6 +68,31 @@ class ReaderViewModel @Inject constructor(
             _uiState.value = ReaderUiState(isLoading = false, error = "Article URL not found.")
         }
     }
+
+    fun togglePlayback() {
+        val currentArticle = _uiState.value.article ?: return
+
+        when (ttsState.value) {
+            TtsState.PLAYING -> ttsManager.stop()
+            TtsState.IDLE -> {
+                viewModelScope.launch {
+                    val cleanText = withContext(Dispatchers.Default) {
+                        Jsoup.parse(currentArticle.body ?: "").text()
+                    }
+                    ttsManager.speak(cleanText)
+                }
+            }
+            TtsState.ERROR -> ttsManager.retryInitialization()
+            else -> {/* Ignore INITIALIZING */}
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // IMPORTANT: Free up native TTS resources when the ViewModel is destroyed
+        ttsManager.stop()
+    }
+
 
     fun toggleSettings() {
         _uiState.value = _uiState.value.copy(isSettingsVisible = !_uiState.value.isSettingsVisible)

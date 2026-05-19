@@ -19,6 +19,10 @@ class ReadabilityContentExtractor : WebContentExtractor {
     override fun extractContent(url: String, document: Document): ArticleContent {
         // Readability works best on a clone of the document as it modifies the DOM
         val docClone = document.clone()
+
+        // Language selection for the purposes of TTS Speech Language
+        val rawLang = docClone.select("html").attr("lang")
+        val parsedLang = if (rawLang.isNotBlank()) rawLang.split("-")[0] else "en"
         
         // Remove known "noisy" elements that Readability might miss
         docClone.select("nav, footer, .ads, .sidebar, script, style").remove()
@@ -28,7 +32,8 @@ class ReadabilityContentExtractor : WebContentExtractor {
 
         return ArticleContent(
             title = article.title ?: docClone.title(),
-            body = article.content ?: article.textContent ?: ""
+            body = article.content ?: article.textContent ?: "",
+            languageCode = parsedLang,
         )
     }
 }

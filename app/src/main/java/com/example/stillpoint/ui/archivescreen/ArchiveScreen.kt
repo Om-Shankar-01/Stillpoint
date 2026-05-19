@@ -42,8 +42,6 @@ fun ArchiveScreen(
     val archivedItems by viewModel.archivedItems.collectAsStateWithLifecycle()
     val selectionItems by viewModel.selectedItems.collectAsStateWithLifecycle()
 
-    val inSelection by viewModel.isSelectionMode.collectAsStateWithLifecycle()
-
     val isMultiDeleteDialogVisible by viewModel.isMultiDeleteDialogVisible.collectAsStateWithLifecycle()
 
     val context = LocalContext.current

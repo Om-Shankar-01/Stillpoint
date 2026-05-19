@@ -12,7 +12,7 @@ import org.jsoup.Jsoup
 import java.net.URL
 import java.net.URLDecoder
 
-data class ArticleContent(val title: String?, val body: String?)
+data class ArticleContent(val title: String?, val body: String?, val languageCode: String? = "en")
 
 interface ContentRepository {
     fun getAllItems(): Flow<List<ContentItem>>
@@ -113,6 +113,11 @@ class CachingContentRepository(
                         "Web"
                     }
 
+                    /*** Extract Language ***/
+                    val rawLang = doc.select("html").attr("lang")
+                    val parsedLang = if (rawLang.isNotBlank()) rawLang.split("-")[0] else "en"
+
+
                     val contentItem = ContentItem(
                         url = url,
                         title = title,
@@ -121,7 +126,8 @@ class CachingContentRepository(
                         sourceName = sourceName,
                         type = ContentType.ARTICLE, // For now, we assume everything is an article.
                         estimatedTimeMinutes = estimatedTimeMinutes,
-                        isArchived = false
+                        isArchived = false,
+                        languageCode = parsedLang,
                     )
 
                     contentDao.insertItem(contentItem)
