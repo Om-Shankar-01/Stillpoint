@@ -2,29 +2,29 @@ package com.example.stillpoint.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,6 +33,7 @@ import com.example.stillpoint.R
 import com.example.stillpoint.data.AppTheme
 import com.example.stillpoint.ui.homescreen.EditNameDialog
 import com.example.stillpoint.ui.readerscreen.ReaderSettingsDialog
+import com.example.stillpoint.ui.theme.StillpointTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,40 +142,55 @@ fun SettingsClickableItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppThemeSelector(
     selectedTheme: AppTheme,
-    onThemeSelected: (AppTheme) -> Unit
+    onThemeSelected: (AppTheme) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Column {
-        AppThemeOption("System Default", AppTheme.SYSTEM, selectedTheme == AppTheme.SYSTEM) {
-            onThemeSelected(AppTheme.SYSTEM)
-        }
-        AppThemeOption("Light", AppTheme.LIGHT, selectedTheme == AppTheme.LIGHT) {
-            onThemeSelected(AppTheme.LIGHT)
-        }
-        AppThemeOption("Dark", AppTheme.DARK, selectedTheme == AppTheme.DARK) {
-            onThemeSelected(AppTheme.DARK)
+    ButtonGroup(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, bottom = 8.dp),
+        overflowIndicator = { Text("...") },
+        expandedRatio = 0f
+    ) {
+        AppTheme.entries.forEach {
+            val theme = it
+            val isSelected = theme == selectedTheme
+
+            val icon = when(theme.ordinal) {
+                0 -> R.drawable.rounded_light_mode
+                1 -> R.drawable.rounded_dark_mode
+                else -> R.drawable.rounded_mobile
+            }
+
+            this.toggleableItem(
+                checked = isSelected,
+                label = theme.name,
+                onCheckedChange = {
+                    onThemeSelected(theme)
+                },
+                icon = {
+                    if (isSelected) {
+                        Icon(painter = painterResource(icon), contentDescription = null)
+                    } else null
+                },
+            )
         }
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun AppThemeOption(
-    label: String,
-    theme: AppTheme,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(selected = isSelected, onClick = onClick)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+fun AppThemeSelectorPreview() {
+    StillpointTheme {
+        Surface {
+            AppThemeSelector(
+                selectedTheme = AppTheme.SYSTEM,
+                onThemeSelected = {}
+            )
+        }
     }
 }

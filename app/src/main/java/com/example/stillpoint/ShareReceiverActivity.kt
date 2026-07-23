@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.lifecycleScope
+import com.example.stillpoint.data.ApplicationScope
 import com.example.stillpoint.data.ContentRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -16,6 +19,10 @@ class ShareReceiverActivity : ComponentActivity() {
 
     @Inject
     lateinit var repository: ContentRepository
+
+    @Inject
+    @ApplicationScope
+    lateinit var externalScope: CoroutineScope
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,12 +32,14 @@ class ShareReceiverActivity : ComponentActivity() {
             if ("text/plain" == intent.type) {
                 // Get the shared text (the URL)
                 intent.getStringExtra(Intent.EXTRA_TEXT)?.let { url ->
-                    lifecycleScope.launch {
+                    externalScope.launch {
                         Log.d("ShareReceiver", "Attempting to save URL: $url")
                         val result = repository.saveContentFromUrl(url)
-                        val message =
-                            if (result.isSuccess) "Item saved successfully" else "Error saving URL"
-                        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                        withContext(Dispatchers.Main) {
+                            val message =
+                                if (result.isSuccess) "Item saved successfully" else "Error saving URL"
+                            Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

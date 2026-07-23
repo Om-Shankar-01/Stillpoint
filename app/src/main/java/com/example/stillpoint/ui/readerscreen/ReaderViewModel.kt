@@ -93,7 +93,6 @@ class ReaderViewModel @Inject constructor(
         ttsManager.stop()
     }
 
-
     fun toggleSettings() {
         _uiState.value = _uiState.value.copy(isSettingsVisible = !_uiState.value.isSettingsVisible)
     }
