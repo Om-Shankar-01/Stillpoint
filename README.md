@@ -1,84 +1,93 @@
 # 🧘‍♂️ Stillpoint
 
-**Stillpoint** is a modern, minimalist Android application designed to help users calmly manage their digital content backlog.  
-It’s a *“read-it-later”* app built with the core philosophy of turning content chaos into a focused, organized library.  
-Built with a **100% Kotlin**, modern Android tech stack.
+**Stillpoint** is a modern, minimalist Android application designed to help users calmly manage their digital content backlog. It turns daily link clutter—articles, blogs, news, and YouTube videos—into a focused, distraction-free reading queue and calm library.
+
+Built with **100% Kotlin** and modern Android development practices (Jetpack Compose, MVVM, Room, Hilt, Readability, and Text-to-Speech).
 
 ---
 
 ## ✨ Features
-- **MVP Complete** — The app is feature-complete with a strong foundation for future development.
-- **Universal Save via Share Sheet**  
-  Save links from any app (browser, YouTube, or social media) using the native Android Share Sheet.
-- **Manual Content Addition**  
-  Add URLs manually through a prominent Floating Action Button for quick entry.
-- **Automatic Metadata Scraping**  
-  Automatically fetches title, description, primary image, and estimated reading time for articles using *Jsoup*.
-- **Time-Based Filtering**  
-  Instantly filter your reading queue by available time (e.g., *~5 min*, *~15 min*, *1 hr+*).
-- **Intuitive Gesture Management**  
-  - **Swipe Right** → Archive (mark as “done”)  
-  - **Swipe Left** → Delete (permanently remove)
-- **Dedicated Archive Screen**  
-  View all consumed and archived items separately, keeping your main queue focused.
-- **In-App Reader**  
-  Tap an item to open it in a minimalist WebView for seamless reading without leaving the app.
+
+### 📥 Universal Content Capture
+- **Native Share Sheet Integration**: Save links from any app (browsers, social media, RSS readers) directly to your queue.
+- **Manual Link Entry**: Easily add web links manually via a floating action button with instant URL validation.
+- **Automatic Metadata Scraping**: Intelligently extracts page titles, descriptions, high-resolution preview images, host domains, and refined reading time estimates.
+
+### 📖 Distraction-Free Reader Mode
+- **Readability Engine**: Strips away advertisements, popups, sidebars, navigation headers, and clutter using the Readability algorithm.
+- **Offline Article Caching**: Full article text and structure are automatically cached locally in Room database for offline reading.
+- **Customizable Typography & Themes**: Adjust font size (12pt–32pt), typography (Sans-Serif, Serif, Monospace), and reader themes (Light, Dark, Sepia, System).
+- **Rich HTML Rendering**: Native Jetpack Compose blocks for headings, paragraphs, formatted text, blockquotes, ordered/unordered lists, and inline images.
+
+### 🎧 Text-to-Speech (TTS) Reader
+- **Listen On-the-Go**: Integrated Android Text-to-Speech engine allows you to listen to saved articles read aloud.
+- **Playback Controls & Chunking**: Sentence-level chunking for natural pauses, seamless playback controls, and automatic document language detection.
+
+### 🎥 YouTube & Video Integration
+- **YouTube Metadata Extraction**: Automatically detects YouTube links (standard, shorts, embeds) and fetches video titles, channel names, high-res thumbnails, and video durations.
+- **One-Tap Streaming**: Direct launch into your external browser or YouTube app.
+
+### ⏱️ Time-Based Filtering & Queue Management
+- **Time Filters**: Filter your queue instantly by available reading/watching time (*~5 min*, *~15 min*, *1 hr+*).
+- **Intuitive Gestures**: 
+  - **Swipe Right** → Archive item
+  - **Swipe Left** → Delete item (with confirmation)
+- **Multi-Select & Bulk Actions**: Long-press to enter selection mode and perform bulk archiving or deletion.
+- **Dedicated Archive Screen**: Search, organize, restore, or clear read content in a separate archived view.
+
+### ⚙️ Personalization & Settings
+- **Custom User Greeting**: Personalize the welcome header with your name.
+- **App Theme Customization**: Support for Light Mode, Dark Mode, or System Default with persistent DataStore storage.
+- **Default Reader Preferences**: Configure your default reader font styles and themes globally.
 
 ---
 
-## Tech Stack & Architecture
+## 🛠️ Tech Stack & Architecture
 
-Stillpoint follows **modern Android best practices** with a clean, scalable architecture.
+Stillpoint is built using modern Android architecture guidelines for performance, scalability, and maintainability.
 
-### Architecture
-- **Pattern:** Clean **MVVM (Model–View–ViewModel)** for separation of concerns.  
-- **Dependency Injection:** *Hilt* for managing and decoupling dependencies.  
-- **Asynchronous Programming:** *Kotlin Coroutines & Flows* for smooth, non-blocking UI.  
-- **Database:** *Room* for local persistence with safe migration (v1 → v2).  
-- **Navigation:** *Jetpack Navigation for Compose* with type-safe, serializable routes.
-
-### Networking & Scraping
-- **HTML Parsing:** *Jsoup* for fetching and extracting metadata.  
-- **Network Security:** Configured to safely handle HTTP cleartext traffic.  
-
-### Image Loading
-- **Coil 3** for efficient image loading, caching, and placeholder/error handling.
-
-### UI
-- **Jetpack Compose** for declarative, reactive, and modern UI development.
+| Category | Technology |
+| :--- | :--- |
+| **Language** | 100% Kotlin |
+| **UI Framework** | Jetpack Compose + Material 3 (Expressive API) |
+| **Architecture** | MVVM (Model-View-ViewModel) + Clean Architecture |
+| **Dependency Injection** | Dagger Hilt |
+| **Database & Persistence** | Room Database (with offline caching) + DataStore Preferences |
+| **Asynchronous Programming** | Kotlin Coroutines & Flow |
+| **Article Extraction & Parsing** | Readability4J + Jsoup |
+| **Networking & APIs** | Ktor Client + YouTube Data API |
+| **Image Loading** | Coil 3 |
+| **Text-to-Speech** | Android Native TextToSpeech API |
+| **Navigation** | Jetpack Navigation Compose with Animated Transitions |
 
 ---
 
-## Setup & Installation
-To build and run the project locally:
+## 📱 Installation
 
-### 1. Clone the repository
-```bash
-git clone <your-repo-url>
-```
+### Option 1: Download Pre-compiled APK (Recommended)
+You can directly download and install the latest compiled `.apk` binary on your Android device:
+1. Go to the [**GitHub Releases**](../../releases) page of this repository.
+2. Download the latest `stillpoint-vX.Y.apk` asset.
+3. Open the downloaded file on your Android device (ensure *"Install from unknown sources"* is enabled for your browser/file manager if prompted).
 
-### 2. Open in Android Studio
-Launch the latest stable version of Android Studio.
+### Option 2: Build & Run from Source
+To build Stillpoint locally using Android Studio:
 
-Go to File → Open and select the cloned repository folder.
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/your-username/Stillpoint.git
+   ```
+2. **Open in Android Studio**:
+   - Open Android Studio (Ladybug / Jellyfish or newer recommended).
+   - Select **File → Open** and choose the `Stillpoint` folder.
+3. **Sync Gradle**:
+   - Let Gradle sync dependencies automatically.
+4. **Run on Device / Emulator**:
+   - Select an emulator or connected physical Android device (Android 12 / API 31 or higher).
+   - Click **Run ▶️** (`Shift + F10`).
 
-### 3. Sync Gradle
+---
 
-Android Studio will automatically sync dependencies.
+## 🧘 Summary
 
-### 4. Run the App
-Select an emulator or connect a physical device.
-
-Click Run ▶️ to build and launch.
-
-### 📈 Project Status
-
-Status: MVP Complete
-
-- The core user journey — saving, filtering, viewing, and managing content — is fully implemented with a polished UI.
-- Future development may include:
-    1. Direct API integrations
-    2. Tagging and categorization
-    3. Enhanced reader modes
-
-***Stillpoint turns digital clutter into mindful focus 🧘 — one article at a time.***
+> *Stillpoint turns digital clutter into mindful focus — one article at a time.*
